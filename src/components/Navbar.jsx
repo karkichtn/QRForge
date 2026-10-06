@@ -1,106 +1,108 @@
-import React, { useState } from 'react';
-import { QrCode, Menu, X, Sparkles, ExternalLink } from 'lucide-react';
-import GithubIcon from './GithubIcon';
+import React, { useState, useEffect } from 'react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const closeMenu = () => {
-    setMobileMenuOpen(false);
-  };
+  const closeMenu = () => setMobileMenuOpen(false);
 
   return (
-    <header className="header" role="banner">
-      <div className="container header-container">
-        {/* Brand Logo */}
-        <a href="#generator" className="brand-logo" aria-label="QRForge Homepage">
-          <div className="brand-icon-wrapper">
-            <QrCode size={22} strokeWidth={2.4} />
-          </div>
-          <span className="brand-name">QRForge</span>
-          <span className="brand-badge">PRO</span>
-        </a>
-
-        {/* Desktop Nav Links */}
-        <nav aria-label="Main Navigation">
-          <ul className="nav-links">
-            <li>
-              <a href="#generator" className="nav-link">
-                Generator
-              </a>
-            </li>
-            <li>
-              <a href="#how-it-works" className="nav-link">
-                How It Works
-              </a>
-            </li>
-            <li>
-              <a href="#features" className="nav-link">
-                Why QRForge
-              </a>
-            </li>
-            <li>
-              <a href="#about" className="nav-link">
-                About
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Header Actions */}
-        <div className="header-actions">
-          <a
-            href="https://github.com/karkichtn/QRForge"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="github-btn"
-            aria-label="GitHub Repository"
-          >
-            <GithubIcon size={17} />
-            <span>GitHub</span>
+    <header className={`nav-header ${isScrolled ? 'scrolled' : ''}`} role="banner">
+      <div className="container">
+        <div className="nav-inner">
+          {/* Minimal Brand */}
+          <a href="#" className="nav-brand" aria-label="QRForge">
+            <span className="nav-brand-dot" />
+            <span>QRFORGE</span>
           </a>
 
-          {/* Mobile Menu Button */}
+          {/* Desktop Links */}
+          <nav aria-label="Primary Navigation">
+            <ul className="nav-menu">
+              <li>
+                <a href="#generator" className="nav-link">
+                  Generator
+                </a>
+              </li>
+              <li>
+                <a href="#how-it-works" className="nav-link">
+                  How It Works
+                </a>
+              </li>
+              <li>
+                <a href="#features" className="nav-link">
+                  Philosophy
+                </a>
+              </li>
+              <li>
+                <a href="#about" className="nav-link">
+                  About
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Header Action */}
+          <div className="nav-right-actions">
+            <a
+              href="https://github.com/karkichtn/QRForge"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-cta-btn"
+            >
+              <span>GitHub</span>
+              <ArrowUpRight size={12} style={{ display: 'inline', marginLeft: 4 }} />
+            </a>
+          </div>
+
+          {/* Mobile Toggle */}
           <button
             type="button"
-            className="mobile-menu-btn"
-            onClick={toggleMenu}
-            aria-expanded={mobileMenuOpen}
-            aria-label="Toggle navigation menu"
+            className="nav-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation"
           >
-            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
-      <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
-        <a href="#generator" className="mobile-nav-link" onClick={closeMenu}>
+      {/* Mobile Drawer */}
+      <div className={`mobile-nav-panel ${mobileMenuOpen ? 'open' : ''}`}>
+        <a href="#generator" className="mobile-nav-item" onClick={closeMenu}>
           <span>Generator</span>
-          <Sparkles size={16} />
+          <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>01</span>
         </a>
-        <a href="#how-it-works" className="mobile-nav-link" onClick={closeMenu}>
+        <a href="#how-it-works" className="mobile-nav-item" onClick={closeMenu}>
           <span>How It Works</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>02</span>
         </a>
-        <a href="#features" className="mobile-nav-link" onClick={closeMenu}>
-          <span>Why QRForge</span>
+        <a href="#features" className="mobile-nav-item" onClick={closeMenu}>
+          <span>Philosophy</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>03</span>
         </a>
-        <a href="#about" className="mobile-nav-link" onClick={closeMenu}>
+        <a href="#about" className="mobile-nav-item" onClick={closeMenu}>
           <span>About</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>04</span>
         </a>
         <a
           href="https://github.com/karkichtn/QRForge"
           target="_blank"
           rel="noopener noreferrer"
-          className="mobile-nav-link"
+          className="mobile-nav-item"
           onClick={closeMenu}
         >
-          <span>GitHub Repository</span>
-          <ExternalLink size={16} />
+          <span>Source Code</span>
+          <ArrowUpRight size={18} />
         </a>
       </div>
     </header>

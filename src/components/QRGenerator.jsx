@@ -1,39 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
-import confetti from 'canvas-confetti';
 import {
-  Link2,
-  QrCode,
   Download,
   Copy,
   Share2,
   RotateCcw,
-  Sparkles,
-  AlertCircle,
   ExternalLink,
   Clipboard,
   X,
   SlidersHorizontal,
   Check,
-  History,
-  Trash2,
-  ShieldCheck
+  AlertCircle,
+  CornerDownLeft,
 } from 'lucide-react';
 
-const COLOR_PRESETS = [
-  { name: 'Classic Dark', dark: '#090a10', light: '#ffffff' },
-  { name: 'Indigo Cyber', dark: '#4f46e5', light: '#ffffff' },
-  { name: 'Neon Purple', dark: '#7e22ce', light: '#ffffff' },
-  { name: 'Midnight Blue', dark: '#0369a1', light: '#ffffff' },
-  { name: 'Emerald', dark: '#047857', light: '#ffffff' },
-  { name: 'Crimson', dark: '#be123c', light: '#ffffff' },
-];
-
-const QUICK_LINKS = [
-  { label: 'GitHub', url: 'https://github.com' },
-  { label: 'YouTube', url: 'https://youtube.com' },
-  { label: 'Wikipedia', url: 'https://wikipedia.org' },
-  { label: 'ProductHunt', url: 'https://producthunt.com' }
+const QUICK_SAMPLES = [
+  { label: 'github.com', url: 'https://github.com' },
+  { label: 'rockstargames.com', url: 'https://rockstargames.com' },
+  { label: 'wikipedia.org', url: 'https://wikipedia.org' },
+  { label: 'apple.com', url: 'https://apple.com' },
 ];
 
 export default function QRGenerator({ showToast }) {
@@ -44,13 +29,12 @@ export default function QRGenerator({ showToast }) {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [dataUrl, setDataUrl] = useState('');
 
-  // Customization Options
+  // Technical Options
   const [showOptions, setShowOptions] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0]);
   const [qrSize, setQrSize] = useState(800);
-  const [ecLevel, setEcLevel] = useState('H'); // High error correction level for durability
+  const [ecLevel, setEcLevel] = useState('H');
 
-  // Recent History
+  // History from localStorage
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem('qrforge_history');
@@ -60,10 +44,8 @@ export default function QRGenerator({ showToast }) {
     }
   });
 
-  const canvasRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Sync history with localStorage
   useEffect(() => {
     try {
       localStorage.setItem('qrforge_history', JSON.stringify(history));
@@ -77,40 +59,32 @@ export default function QRGenerator({ showToast }) {
     if (!rawInput) return { valid: false, error: 'Please enter a URL' };
 
     let cleaned = rawInput.trim();
-
-    // If user enters google.com or www.google.com without scheme, prepend https://
     if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(cleaned)) {
       cleaned = `https://${cleaned}`;
     }
 
     try {
       const parsed = new URL(cleaned);
-      // Ensure protocol is http or https
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         return { valid: false, error: 'Only HTTP and HTTPS links are supported' };
       }
-      // Ensure there's a valid host
       if (!parsed.hostname || !parsed.hostname.includes('.')) {
-        return { valid: false, error: 'Please enter a valid domain (e.g., example.com)' };
+        return { valid: false, error: 'Please enter a valid domain (e.g. example.com)' };
       }
       return { valid: true, url: parsed.href, hostname: parsed.hostname };
     } catch {
-      return { valid: false, error: 'Invalid URL format. Please check and try again.' };
+      return { valid: false, error: 'Invalid URL format' };
     }
   };
 
-  // Main Generation Handler
-  const handleGenerate = async (overrideUrl, triggerConfetti = true, isSilentValidation = false) => {
+  // Generation Handler
+  const handleGenerate = async (overrideUrl, isSilent = false) => {
     const rawToTest = typeof overrideUrl === 'string' ? overrideUrl : inputUrl;
-    if (!isSilentValidation) {
-      setErrorMessage('');
-    }
+    if (!isSilent) setErrorMessage('');
 
     const validation = normalizeAndValidateUrl(rawToTest);
     if (!validation.valid) {
-      if (!isSilentValidation) {
-        setErrorMessage(validation.error);
-      }
+      if (!isSilent) setErrorMessage(validation.error);
       return false;
     }
 
@@ -122,8 +96,8 @@ export default function QRGenerator({ showToast }) {
         width: qrSize,
         margin: 2,
         color: {
-          dark: selectedColor.dark,
-          light: selectedColor.light,
+          dark: '#08080a',
+          light: '#ffffff',
         },
         errorCorrectionLevel: ecLevel,
       });
@@ -134,7 +108,7 @@ export default function QRGenerator({ showToast }) {
       setHasGenerated(true);
       setErrorMessage('');
 
-      // Save to history
+      // Update history
       const newEntry = {
         id: Date.now(),
         url: validatedUrl,
@@ -145,35 +119,20 @@ export default function QRGenerator({ showToast }) {
 
       setHistory((prev) => {
         const filtered = prev.filter((item) => item.url !== validatedUrl);
-        return [newEntry, ...filtered].slice(0, 6);
+        return [newEntry, ...filtered].slice(0, 4);
       });
 
-      // Confetti celebratory burst on explicit paste or generate
-      if (triggerConfetti) {
-        try {
-          confetti({
-            particleCount: 30,
-            spread: 55,
-            origin: { y: 0.65 },
-            colors: ['#8b5cf6', '#6366f1', '#06b6d4', '#38bdf8'],
-          });
-        } catch {
-          // ignore
-        }
-      }
       return true;
     } catch (err) {
       console.error('QR Generation failed:', err);
-      if (!isSilentValidation) {
-        setErrorMessage('Could not generate QR code. Please check your URL.');
-      }
+      if (!isSilent) setErrorMessage('Could not generate QR code.');
       return false;
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Real-time live auto-generation when inputUrl changes
+  // Live Real-Time Auto-Generation as user types
   useEffect(() => {
     const trimmed = inputUrl.trim();
     if (!trimmed) {
@@ -184,57 +143,40 @@ export default function QRGenerator({ showToast }) {
       return;
     }
 
-    // Skip if already generated for this exact URL
-    if (currentUrl === trimmed && hasGenerated) {
-      return;
-    }
+    if (currentUrl === trimmed && hasGenerated) return;
 
     const validation = normalizeAndValidateUrl(trimmed);
-    if (!validation.valid) {
-      // Don't disturb user with errors while they are midway typing
-      return;
-    }
+    if (!validation.valid) return;
 
     const debounceTimer = setTimeout(() => {
-      handleGenerate(trimmed, false, true);
-    }, 200);
+      handleGenerate(trimmed, true);
+    }, 220);
 
     return () => clearTimeout(debounceTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputUrl]);
 
-  // Handle re-render if options change while a QR is visible
+  // Re-generate if options change
   useEffect(() => {
     if (hasGenerated && currentUrl) {
-      handleGenerate(currentUrl, false, true);
+      handleGenerate(currentUrl, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedColor, qrSize, ecLevel]);
+  }, [qrSize, ecLevel]);
 
-  // Handle Enter Key
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (inputUrl.trim() && !isGenerating) {
-        handleGenerate(inputUrl, true, false);
-      }
-    }
-  };
-
-  // Direct generation on paste event in input
+  // Direct paste on input element
   const handleInputPaste = (e) => {
     const pastedText = e.clipboardData?.getData('text');
     if (pastedText && pastedText.trim()) {
       const trimmed = pastedText.trim();
       setInputUrl(trimmed);
       setErrorMessage('');
-      // Generate immediately without waiting for a click or delay!
-      handleGenerate(trimmed, true, false);
+      handleGenerate(trimmed, false);
     }
   };
 
-  // Clipboard Paste Button Click Helper
-  const handlePaste = async () => {
+  // Clipboard Paste Button
+  const handlePasteBtn = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text && text.trim()) {
@@ -242,18 +184,25 @@ export default function QRGenerator({ showToast }) {
         setInputUrl(trimmed);
         setErrorMessage('');
         inputRef.current?.focus();
-        // Generate immediately without waiting for a click!
-        handleGenerate(trimmed, true, false);
+        handleGenerate(trimmed, false);
       }
     } catch {
-      showToast('Could not access clipboard. Please paste manually.', 'info');
+      showToast('Could not access clipboard.', 'info');
     }
   };
 
-  // Download Action (High Resolution PNG)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (inputUrl.trim() && !isGenerating) {
+        handleGenerate(inputUrl, false);
+      }
+    }
+  };
+
+  // Download Action
   const handleDownloadPng = () => {
     if (!dataUrl) return;
-
     try {
       let domain = 'qrforge';
       try {
@@ -261,420 +210,334 @@ export default function QRGenerator({ showToast }) {
       } catch {
         // ignore
       }
-
-      const filename = `${domain}-qrcode.png`;
+      const filename = `${domain}-qrforge.png`;
       const link = document.createElement('a');
       link.href = dataUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      showToast(`Downloaded ${filename} successfully!`, 'success');
-    } catch (err) {
-      console.error('Download error:', err);
+      showToast(`Downloaded ${filename}`, 'success');
+    } catch {
       showToast('Failed to download QR code.', 'error');
     }
   };
 
-  // Copy Link Action
+  // Copy URL Action
   const handleCopyLink = async () => {
     if (!currentUrl) return;
     try {
       await navigator.clipboard.writeText(currentUrl);
-      showToast('Link copied!', 'success');
+      showToast('Link copied to clipboard', 'success');
     } catch {
       showToast('Failed to copy link.', 'error');
     }
   };
 
-  // Share Action (Web Share API with fallback)
+  // Share Action
   const handleShare = async () => {
     if (!currentUrl) return;
-
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'QRForge Generated Link',
-          text: `Scan or visit: ${currentUrl}`,
+          title: 'QRForge Link',
+          text: currentUrl,
           url: currentUrl,
         });
-        showToast('Shared successfully!', 'success');
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          // Gracefully fallback to copying link
-          handleCopyLink();
-        }
+        if (err.name !== 'AbortError') handleCopyLink();
       }
     } else {
-      // Gracefully fall back to copying URL
       handleCopyLink();
     }
   };
 
-  // Reset / Generate New QR
+  // Reset
   const handleReset = () => {
     setInputUrl('');
     setErrorMessage('');
+    setHasGenerated(false);
+    setDataUrl('');
+    setCurrentUrl('');
     inputRef.current?.focus();
   };
 
-  const handleClearHistory = () => {
-    setHistory([]);
-    try {
-      localStorage.removeItem('qrforge_history');
-    } catch {
-      // ignore
-    }
-    showToast('Recent history cleared', 'info');
-  };
-
-  // Extract hostname for cleaner display
-  const getHostname = (url) => {
-    try {
-      return new URL(url).hostname;
-    } catch {
-      return 'link';
-    }
-  };
-
   return (
-    <section id="generator" className="hero-section">
+    <section id="generator" className="editorial-section">
       <div className="container">
-        {/* Hero Header */}
-        <div className="hero-badge-wrapper">
-          <div className="hero-badge">
-            <Sparkles size={14} className="hero-badge-icon" />
-            <span>⚡ Instant QR Generation</span>
+        {/* Editorial Section Header */}
+        <div className="editorial-header-block">
+          <div className="eyebrow-tag">
+            <span className="eyebrow-accent">[ 002 // ENGINE ]</span>
+            <span>DIRECT VECTOR ENCODING</span>
           </div>
+          <h2 className="editorial-title">CREATE YOUR CODE</h2>
+          <p className="editorial-subtitle">
+            Paste any destination URL. Real-time client compilation with zero server hops.
+          </p>
         </div>
 
-        <h1 className="hero-title">
-          Turn Any Link Into a <span className="hero-title-highlight">QR Code</span>
-        </h1>
-
-        <p className="hero-subtitle">
-          Paste your URL, generate a beautiful QR code, and share it anywhere — instantly.
-        </p>
-
-        {/* Generator Card Container */}
-        <div className="generator-container">
-          <div className="glass-card generator-card">
-            {/* Input Group */}
-            <div className="input-group">
-              <div className="input-label-row">
-                <label htmlFor="url-input" className="input-label">
-                  <Link2 size={16} color="var(--primary-cyan)" />
-                  <span>Target Destination URL</span>
-                </label>
-                <span className="label-hint" style={{ color: 'var(--primary-cyan)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
-                  Instant Live Generation Active
-                </span>
-              </div>
-
-              <div className={`input-box-wrapper ${errorMessage ? 'has-error' : ''}`}>
-                <div className="input-icon">
-                  <Link2 size={20} />
-                </div>
-
-                <input
-                  ref={inputRef}
-                  id="url-input"
-                  type="text"
-                  className="url-input"
-                  placeholder="https://example.com"
-                  value={inputUrl}
-                  onChange={(e) => {
-                    setInputUrl(e.target.value);
-                    if (errorMessage) setErrorMessage('');
-                  }}
-                  onPaste={handleInputPaste}
-                  onKeyDown={handleKeyDown}
-                  aria-invalid={!!errorMessage}
-                  aria-describedby={errorMessage ? 'url-error' : undefined}
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-
-                <div className="input-actions">
-                  {inputUrl && (
-                    <button
-                      type="button"
-                      className="clear-btn"
-                      onClick={() => setInputUrl('')}
-                      title="Clear input"
-                      aria-label="Clear input text"
-                    >
-                      <X size={15} />
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    className="paste-btn"
-                    onClick={handlePaste}
-                    title="Paste from clipboard"
-                    aria-label="Paste from clipboard"
-                  >
-                    <Clipboard size={14} />
-                    <span className="paste-btn-text">Paste</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Error Message display */}
-              {errorMessage && (
-                <div id="url-error" className="error-message" role="alert">
-                  <AlertCircle size={16} />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              {/* Quick sample chips */}
-              <div className="quick-samples">
-                <span>Try quick sample:</span>
-                {QUICK_LINKS.map((sample) => (
-                  <button
-                    key={sample.label}
-                    type="button"
-                    className="sample-chip"
-                    onClick={() => {
-                      setInputUrl(sample.url);
-                      setErrorMessage('');
-                      handleGenerate(sample.url);
-                    }}
-                  >
-                    {sample.label}
-                  </button>
-                ))}
-              </div>
+        {/* Clean Architectural Generator Container */}
+        <div className="generator-editorial-wrapper">
+          <div className="input-editorial-container">
+            {/* Input Metadata Bar */}
+            <div className="input-metadata-line">
+              <span>DESTINATION URL // LIVE VALIDATION</span>
+              <span style={{ color: 'var(--accent-amber)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 5, height: 5, background: 'var(--accent-amber)' }} />
+                REALTIME ACTIVE
+              </span>
             </div>
 
-            {/* Customization Options Toggle */}
-            <div>
-              <button
-                type="button"
-                className="customization-toggle"
-                onClick={() => setShowOptions(!showOptions)}
-                aria-expanded={showOptions}
-              >
-                <SlidersHorizontal size={15} />
-                <span>{showOptions ? 'Hide Customization' : 'Custom Style & Resolution'}</span>
-              </button>
+            {/* Architectural Underline Input Group */}
+            <div className={`input-underline-group ${errorMessage ? 'has-error' : ''}`}>
+              <input
+                ref={inputRef}
+                id="url-input"
+                type="text"
+                className="editorial-url-input"
+                placeholder="https://example.com"
+                value={inputUrl}
+                onChange={(e) => {
+                  setInputUrl(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                onPaste={handleInputPaste}
+                onKeyDown={handleKeyDown}
+                autoComplete="off"
+                spellCheck="false"
+              />
 
-              {showOptions && (
-                <div className="customization-panel" style={{ marginTop: '0.85rem' }}>
-                  {/* Color Palette */}
-                  <div className="option-group">
-                    <span className="option-title">Accent Theme</span>
-                    <div className="color-pills">
-                      {COLOR_PRESETS.map((color) => (
-                        <button
-                          key={color.name}
-                          type="button"
-                          className={`color-pill-btn ${selectedColor.name === color.name ? 'active' : ''}`}
-                          style={{ backgroundColor: color.dark }}
-                          onClick={() => setSelectedColor(color)}
-                          title={color.name}
-                          aria-label={`Select ${color.name} color`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Resolution Selector */}
-                  <div className="option-group">
-                    <span className="option-title">Resolution (PNG)</span>
-                    <select
-                      className="size-select"
-                      value={qrSize}
-                      onChange={(e) => setQrSize(Number(e.target.value))}
-                      aria-label="Select QR code resolution"
-                    >
-                      <option value={400}>Standard (400 × 400)</option>
-                      <option value={800}>High-Def (800 × 800)</option>
-                      <option value={1200}>Ultra HD 4K (1200 × 1200)</option>
-                    </select>
-                  </div>
-
-                  {/* Error Correction Level */}
-                  <div className="option-group">
-                    <span className="option-title">Error Correction</span>
-                    <select
-                      className="ec-select"
-                      value={ecLevel}
-                      onChange={(e) => setEcLevel(e.target.value)}
-                      aria-label="Select Error Correction Level"
-                    >
-                      <option value="H">High (30% redundancy)</option>
-                      <option value="Q">Quartile (25% redundancy)</option>
-                      <option value="M">Medium (15% redundancy)</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Primary Generate Button */}
-            {/* Primary Generate Button / Live Indicator */}
-            <div className="generate-btn-row">
-              <button
-                type="button"
-                className="btn-generate"
-                disabled={!inputUrl.trim() || isGenerating}
-                onClick={() => handleGenerate(inputUrl, true, false)}
-                aria-busy={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="spinner" />
-                    <span>Rendering QR Code...</span>
-                  </>
-                ) : hasGenerated ? (
-                  <>
-                    <Check size={20} strokeWidth={2.4} />
-                    <span>QR Code Generated • Instant Live</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={20} strokeWidth={2.4} />
-                    <span>Instant Live Generator</span>
-                  </>
+              <div className="input-tail-actions">
+                {inputUrl && (
+                  <button
+                    type="button"
+                    className="btn-inline-action"
+                    onClick={() => setInputUrl('')}
+                    title="Clear URL"
+                  >
+                    <X size={13} />
+                    <span>CLEAR</span>
+                  </button>
                 )}
-              </button>
+
+                <button
+                  type="button"
+                  className="btn-inline-action"
+                  onClick={handlePasteBtn}
+                  title="Paste from clipboard"
+                >
+                  <Clipboard size={13} />
+                  <span>PASTE</span>
+                </button>
+              </div>
             </div>
 
-            {/* QR Result Section */}
-            <div className="qr-result-section">
-              {!hasGenerated ? (
-                /* Empty State */
-                <div className="qr-empty-state">
-                  <div className="empty-icon-box">
-                    <QrCode size={36} strokeWidth={1.8} />
-                  </div>
-                  <div className="empty-title">Your QR code will appear here</div>
-                  <div className="empty-desc">
-                    Paste or enter any link above — your QR code will generate <strong>instantly</strong> with zero clicks required!
-                  </div>
-                </div>
-              ) : (
-                /* Generated QR Result View */
-                <div className="qr-generated-view">
-                  {/* Clean White Card for Maximum Scannability */}
-                  <div className="qr-canvas-card">
-                    <div className="qr-canvas-wrapper">
-                      {dataUrl && (
-                        <img
-                          src={dataUrl}
-                          alt={`QR Code redirecting to ${currentUrl}`}
-                          style={{
-                            width: 240,
-                            height: 240,
-                            display: 'block',
-                            imageRendering: 'crisp-edges',
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div className="scan-verification-badge">
-                      <ShieldCheck size={14} />
-                      <span>Direct Redirect • Scannable</span>
-                    </div>
-                  </div>
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="error-alert-bar" role="alert">
+                <AlertCircle size={14} />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-                  {/* Original URL Display */}
-                  <div className="qr-url-display-card">
-                    <div className="url-info-left">
-                      <span className="url-domain-tag">{getHostname(currentUrl)}</span>
-                      <span className="url-text-display" title={currentUrl}>
-                        {currentUrl}
-                      </span>
-                    </div>
-
-                    <a
-                      href={currentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="url-open-link"
-                      title="Open URL in new tab"
-                      aria-label="Open original URL in new tab"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  </div>
-
-                  {/* Result Actions Grid */}
-                  <div className="qr-actions-grid">
-                    <button
-                      type="button"
-                      className="action-btn btn-primary-action"
-                      onClick={handleDownloadPng}
-                      aria-label="Download QR code as PNG"
-                    >
-                      <Download size={16} />
-                      <span>Download PNG</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="action-btn btn-secondary-action"
-                      onClick={handleCopyLink}
-                      aria-label="Copy original URL to clipboard"
-                    >
-                      <Copy size={16} />
-                      <span>Copy Link</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="action-btn btn-secondary-action"
-                      onClick={handleShare}
-                      aria-label="Share QR code URL"
-                    >
-                      <Share2 size={16} />
-                      <span>Share</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="action-btn btn-ghost-action"
-                      onClick={handleReset}
-                      aria-label="Generate new QR code"
-                    >
-                      <RotateCcw size={16} />
-                      <span>New QR</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+            {/* Quick Samples */}
+            <div className="samples-row">
+              <span>PRESETS:</span>
+              {QUICK_SAMPLES.map((sample) => (
+                <button
+                  key={sample.label}
+                  type="button"
+                  className="sample-link-btn"
+                  onClick={() => {
+                    setInputUrl(sample.url);
+                    setErrorMessage('');
+                    handleGenerate(sample.url, false);
+                  }}
+                >
+                  {sample.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Recent History Section */}
-          {history.length > 0 && (
-            <div className="history-section">
-              <div className="history-header">
-                <div className="history-title">
-                  <History size={16} color="var(--primary-cyan)" />
-                  <span>Recent QR Codes</span>
+          {/* Action Control Bar */}
+          <div className="generator-control-bar">
+            <button
+              type="button"
+              className="customization-editorial-toggle"
+              onClick={() => setShowOptions(!showOptions)}
+            >
+              <SlidersHorizontal size={14} />
+              <span>{showOptions ? 'HIDE SPECIFICATIONS' : 'ADJUST SPECIFICATIONS'}</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn-generate-cinematic"
+              disabled={!inputUrl.trim() || isGenerating}
+              onClick={() => handleGenerate(inputUrl, false)}
+            >
+              {isGenerating ? (
+                <span>COMPILING...</span>
+              ) : hasGenerated ? (
+                <>
+                  <Check size={16} />
+                  <span>MATRIX READY</span>
+                </>
+              ) : (
+                <>
+                  <span>GENERATE QR CODE</span>
+                  <CornerDownLeft size={14} />
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Technical Specifications Drawer */}
+          {showOptions && (
+            <div className="editorial-options-drawer">
+              <div className="opt-column">
+                <span className="opt-label">EXPORT RESOLUTION</span>
+                <select
+                  className="opt-select"
+                  value={qrSize}
+                  onChange={(e) => setQrSize(Number(e.target.value))}
+                >
+                  <option value={400}>400 × 400 PX (STANDARD)</option>
+                  <option value={800}>800 × 800 PX (HI-RES)</option>
+                  <option value={1200}>1200 × 1200 PX (4K MASTER)</option>
+                </select>
+              </div>
+
+              <div className="opt-column">
+                <span className="opt-label">REDUNDANCY / CORRECTION</span>
+                <select
+                  className="opt-select"
+                  value={ecLevel}
+                  onChange={(e) => setEcLevel(e.target.value)}
+                >
+                  <option value="H">LEVEL H — 30% RECOVERY</option>
+                  <option value="Q">LEVEL Q — 25% RECOVERY</option>
+                  <option value="M">LEVEL M — 15% RECOVERY</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* QR Result Area */}
+          <div className="qr-result-cinematic-container">
+            {!hasGenerated ? (
+              <div className="qr-empty-cinematic">
+                <span className="empty-mono-header">[ STANDBY // NO PAYLOAD ]</span>
+                <p className="empty-main-text">
+                  Paste or input any link above. The vector matrix renders instantly.
+                </p>
+              </div>
+            ) : (
+              <div className="qr-hero-exhibit">
+                {/* Museum-Quality Matte Framed QR Card */}
+                <div className="qr-matte-frame">
+                  <div className="registration-corner corner-tl" />
+                  <div className="registration-corner corner-tr" />
+                  <div className="registration-corner corner-bl" />
+                  <div className="registration-corner corner-br" />
+
+                  {dataUrl && (
+                    <img
+                      src={dataUrl}
+                      alt={`Matrix for ${currentUrl}`}
+                      style={{ imageRendering: 'crisp-edges' }}
+                    />
+                  )}
+
+                  <div className="qr-frame-annotation">
+                    <span className="annotation-dot" />
+                    <span>DIRECT OPTICAL BRIDGE // 100% SCANNABLE</span>
+                  </div>
                 </div>
+
+                {/* Direct URL Metadata Strip */}
+                <div className="result-url-strip">
+                  <span className="result-url-text" title={currentUrl}>
+                    {currentUrl}
+                  </span>
+                  <a
+                    href={currentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="result-url-external"
+                    title="Open destination in new tab"
+                  >
+                    <ExternalLink size={15} />
+                  </a>
+                </div>
+
+                {/* Action Buttons Strip */}
+                <div className="result-actions-strip">
+                  <button
+                    type="button"
+                    className="btn-action-cinematic btn-action-solid"
+                    onClick={handleDownloadPng}
+                  >
+                    <Download size={14} />
+                    <span>DOWNLOAD PNG</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-action-cinematic btn-action-outline"
+                    onClick={handleCopyLink}
+                  >
+                    <Copy size={14} />
+                    <span>COPY LINK</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-action-cinematic btn-action-outline"
+                    onClick={handleShare}
+                  >
+                    <Share2 size={14} />
+                    <span>SHARE</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-action-cinematic btn-action-outline"
+                    onClick={handleReset}
+                  >
+                    <RotateCcw size={14} />
+                    <span>NEW CODE</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* History Strip */}
+          {history.length > 0 && (
+            <div className="history-cinematic-strip">
+              <div className="history-strip-header">
+                <span>RECENT MATRICES</span>
                 <button
                   type="button"
-                  className="clear-history-btn"
-                  onClick={handleClearHistory}
-                  title="Clear history"
+                  style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}
+                  onClick={() => {
+                    setHistory([]);
+                    localStorage.removeItem('qrforge_history');
+                  }}
                 >
-                  Clear History
+                  CLEAR
                 </button>
               </div>
 
-              <div className="history-grid">
+              <div className="history-strip-grid">
                 {history.map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    className="history-item-card"
+                    className="history-strip-card"
                     onClick={() => {
                       setInputUrl(item.url);
                       setCurrentUrl(item.url);
@@ -682,15 +545,13 @@ export default function QRGenerator({ showToast }) {
                       setHasGenerated(true);
                       setErrorMessage('');
                     }}
-                    title={`Restore QR for ${item.url}`}
                   >
-                    <div className="history-item-qr">
-                      <img src={item.thumbnail} alt="" aria-hidden="true" />
+                    <div className="history-card-thumb">
+                      <img src={item.thumbnail} alt="" />
                     </div>
-                    <div className="history-item-info">
-                      <div className="history-item-domain">{item.hostname}</div>
-                      <div className="history-item-url">{item.url}</div>
-                      <div className="history-item-time">{item.timestamp}</div>
+                    <div className="history-card-details">
+                      <div className="history-card-domain">{item.hostname}</div>
+                      <div className="history-card-time">{item.timestamp}</div>
                     </div>
                   </button>
                 ))}

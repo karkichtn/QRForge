@@ -1,74 +1,50 @@
 import React from 'react';
-import {
-  Zap,
-  Smartphone,
-  ShieldCheck,
-  Palette,
-  Download,
-  Link,
-  CheckCircle,
-} from 'lucide-react';
 
-const FEATURES = [
+const STATEMENTS = [
   {
-    icon: Zap,
-    title: 'Instant Generation',
-    description: 'No waiting or queueing. QR codes render immediately on your browser in milliseconds.',
+    main: 'NO ACCOUNT.',
+    sub: '[ 01 // ZERO SIGNUP ]',
+    detail: 'No authentication barriers. No mandatory email submissions. Immediate access on page load.',
   },
   {
-    icon: Smartphone,
-    title: 'Works on Every Device',
-    description: 'Universally scannable by iOS Camera, Android Google Lens, and all barcode reader apps.',
+    main: 'NO COMPLEXITY.',
+    sub: '[ 02 // PURE VECTOR ]',
+    detail: 'No server redirects or expiring dynamic link quotas. The destination is baked directly into the matrix.',
   },
   {
-    icon: ShieldCheck,
-    title: 'No Account Required',
-    description: '100% client-side privacy. Your URLs are never tracked, logged, or stored on remote servers.',
-  },
-  {
-    icon: Palette,
-    title: 'Clean High-Quality QR Codes',
-    description: 'Crisp vector-sharp rendering with configurable error correction and high contrast for effortless scanning.',
-  },
-  {
-    icon: Download,
-    title: 'Download as PNG',
-    description: 'Export directly to high-definition PNG format up to 4K resolution, ready for print, menus, or flyers.',
-  },
-  {
-    icon: Link,
-    title: 'Supports Any URL',
-    description: 'Handles complete URLs, custom subdomains, port numbers, UTM parameters, and query strings flawlessly.',
+    main: 'JUST A LINK.',
+    sub: '[ 03 // UNIVERSAL SCANNABILITY ]',
+    detail: 'Standard ISO/IEC 18004 barcode specification. Seamless resolution across iOS, Android, and industrial scanners.',
   },
 ];
 
 export default function Features() {
   return (
-    <section id="features" className="section-container" aria-labelledby="features-title">
+    <section id="features" className="statements-section">
       <div className="container">
-        <div className="section-header">
-          <div className="section-badge">Built For Performance</div>
-          <h2 id="features-title" className="section-title">
-            Why QRForge?
-          </h2>
-          <p className="section-subtitle">
-            Engineered with modern web standards, privacy-first principles, and pixel-perfect clarity.
-          </p>
+        {/* Section Header */}
+        <div className="editorial-header-block" style={{ marginBottom: '2rem' }}>
+          <div className="eyebrow-tag">
+            <span className="eyebrow-accent">[ 004 // PHILOSOPHY ]</span>
+            <span>CORE PRINCIPLES</span>
+          </div>
+          <h2 className="editorial-title">THE QRFORGE STANDARD</h2>
         </div>
 
-        <div className="features-grid">
-          {FEATURES.map((feature, idx) => {
-            const Icon = feature.icon;
-            return (
-              <div key={idx} className="glass-card feature-card">
-                <div className="feature-icon-wrapper">
-                  <Icon size={22} strokeWidth={2.2} />
+        {/* Large Statement Rows */}
+        <div>
+          {STATEMENTS.map((item, idx) => (
+            <div key={idx} className="statement-row">
+              <div>
+                <div className="eyebrow-tag" style={{ marginBottom: '0.75rem' }}>
+                  {item.sub}
                 </div>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
+                <div className="statement-text">{item.main}</div>
               </div>
-            );
-          })}
+
+              <p className="statement-annotation">{item.detail}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

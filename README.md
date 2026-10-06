@@ -1,10 +1,10 @@
 <div align="center">
 
-# ⚡ QRForge
+# ⚡ QRFORGE
 
-### Turn Any Link Into a High-Resolution QR Code Instantly
+### Cinematic Physical-to-Digital Vector Matrix Generator
 
-A modern, production-grade URL-to-QR code generator built with a futuristic dark-first aesthetic, ambient glassmorphism cards, smooth animations, and 100% client-side privacy.
+A modern, art-directed web application inspired by high-end creative tech and cinematic exhibition design. Pure client-side generation, architectural typography, and 100% privacy.
 
 [![React](https://img.shields.io/badge/React-18+-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.0+-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -15,31 +15,42 @@ A modern, production-grade URL-to-QR code generator built with a futuristic dark
 
 ---
 
-## 🌟 Highlights
+## 🏛️ Design Philosophy
 
-- ⚡ **Zero-Click Instant Generation**: Paste or type any link and your QR code appears **instantly** — no button click required!
-- 📱 **100% Camera Scannable**: Rendered inside a high-contrast white card ensuring crisp readability for iOS Camera, Google Lens, and all barcode scanners.
-- 🔒 **Zero Data Logging**: Your URLs never leave your browser. No tracking redirects, no analytics middlemen, no database storage.
-- 🎨 **Style & Resolution Controls**: Customizable color themes (Classic Dark, Cyber Indigo, Neon Purple, Midnight Blue, Emerald, Crimson), error correction levels (H/Q/M), and HD exports up to 4K (1200×1200).
-- 🔗 **Smart URL Normalization**: Intelligently handles inputs like `google.com` by automatically adding `https://`, supports UTM parameters, query strings, and hashes.
-- 📥 **One-Click Actions**:
-  - **Download PNG**: High-resolution image with domain-based file naming.
-  - **Copy Link**: Copies original URL with animated toast feedback.
-  - **Share**: Integrates with the native Web Share API with automatic clipboard fallback.
-  - **New QR**: Resets input focus instantly.
-- 🕒 **Recent History Drawer**: Remembers your recent QR generations locally in `localStorage` for fast re-access.
-- ♿ **Accessible & Responsive**: Fully responsive from mobile devices to ultrawide displays, keyboard navigable, and respects `prefers-reduced-motion`.
+QRForge moves away from generic SaaS templates, excessive glassmorphism, and neon gradients. Instead, it embraces an **editorial, architectural, and cinematic aesthetic**:
+
+- **Palette**: Deep void black (`#060608`), warm charcoal, titanium white, and restrained tungsten amber accents.
+- **Typography**: Dramatic typographic scale featuring **Syne** for headlines, **Plus Jakarta Sans** for body text, and **JetBrains Mono** for technical metadata and optical viewfinder annotations.
+- **Hero Exhibition**: Asymmetrical layout paired with an interactive 3D mouse-tracking sculptural QR matrix object.
+- **Atmosphere**: Subtle 35mm film grain texture, architectural hairline borders, and top scroll progress indicator.
 
 ---
 
-## 📸 Overview & Sections
+## 🌟 Key Features
 
-1. **Top Navigation**: Sleek glassmorphism header with live links and mobile drawer.
-2. **Hero Generator**: Centered hero with floating ambient orbs, instant link input, sample chips, and live QR preview card.
-3. **How It Works**: 3-step structured cards (`01 — Paste Your Link`, `02 — Generate QR`, `03 — Scan & Go`).
-4. **Why QRForge**: 6 key SaaS feature cards highlighting speed, universal scannability, privacy, and high-definition exports.
-5. **Privacy & Reliability**: Explains direct URL encoding and client-side benefits.
-6. **Footer**: Clean footer with repository links and client-side status badge.
+- ⚡ **Zero-Click Live Generation**: Paste or type any link and the vector matrix generates **instantly in real-time** with zero clicks required.
+- 📱 **Museum-Grade Scannability**: High-contrast matte presentation with optical corner registration brackets `[ + ]` for flawless scanning on all cameras.
+- 🔒 **Zero Data Logging**: 100% client-side compilation via browser JavaScript. Your links are never sent to or logged on remote servers.
+- 📐 **Technical Specifications**: Configurable export resolutions (Standard 400px, Hi-Res 800px, 4K Master 1200px) and Reed-Solomon error correction levels (H, Q, M).
+- 🔗 **Intelligent Link Handling**: Automatically normalizes missing protocols (e.g. `google.com` → `https://google.com`), preserves deep query strings and UTM tracking parameters.
+- 📥 **Export Actions**:
+  - **Download PNG**: High-resolution image with domain-based file naming.
+  - **Copy Link**: Copies original URL with architectural log toast feedback.
+  - **Share**: Integrates with the native Web Share API with automatic clipboard fallback.
+  - **Reset**: Instantly resets the engine.
+- 🕒 **Recent Matrices Drawer**: Persists recent generations in `localStorage` for rapid re-access.
+
+---
+
+## 📸 Section Architecture
+
+1. **Top Navigation**: Minimalist hairline header with live links, GitHub link, and responsive mobile drawer.
+2. **Hero Cinematic**: Asymmetrical typography, technical eyebrows, CTA button, and interactive 3D tilted QR sculpture.
+3. **The Generator**: Architectural input field with direct instant generation on paste, quick sample links, specification controls, and museum-quality framed QR result.
+4. **How It Works**: 3-phase horizontal storytelling pipeline (`01 / INPUT`, `02 / COMPILATION`, `03 / RESOLUTION`).
+5. **The Standard**: High-impact editorial statement typography (`NO ACCOUNT.`, `NO COMPLEXITY.`, `JUST A LINK.`).
+6. **Built For Sharing**: Minimal conclusion with smooth scroll-to-top trigger.
+7. **Footer**: Clean, unadorned professional colophon.
 
 ---
 
@@ -51,19 +62,18 @@ tikka/
 │   └── favicon.svg           # Custom glowing QRForge SVG favicon
 ├── src/
 │   ├── components/
-│   │   ├── AboutSection.jsx  # Privacy & architecture breakdown
-│   │   ├── BackgroundOrbs.jsx# Ambient animated glowing mesh & grid
-│   │   ├── Features.jsx      # 6 feature cards for SaaS credibility
-│   │   ├── Footer.jsx        # Footer with links and system status
-│   │   ├── GithubIcon.jsx    # Crisp SVG GitHub icon
-│   │   ├── HowItWorks.jsx    # 3-step numbered workflow cards
-│   │   ├── Navbar.jsx        # Responsive navigation bar & mobile drawer
-│   │   ├── QRGenerator.jsx   # Core QR engine, validation & options
-│   │   └── Toast.jsx         # Interactive toast notification system
-│   ├── App.jsx               # Main application wrapper with Error Boundary
-│   ├── index.css             # Complete design system & glassmorphism tokens
+│   │   ├── AboutSection.jsx  # "Built for Sharing" conclusion & CTA
+│   │   ├── Features.jsx      # High-impact typographic statements
+│   │   ├── Footer.jsx        # Minimal professional footer
+│   │   ├── HeroSection.jsx   # Asymmetrical hero with 3D tilt specimen
+│   │   ├── HowItWorks.jsx    # 3-phase cinematic storytelling pipeline
+│   │   ├── Navbar.jsx        # Responsive architectural navigation
+│   │   ├── QRGenerator.jsx   # Core vector engine, input & matte display
+│   │   └── Toast.jsx         # Minimal architectural toast logger
+│   ├── App.jsx               # Main layout with Scroll Progress & Error Boundary
+│   ├── index.css             # Architectural design system & film grain
 │   └── main.jsx              # Application root entry point
-├── index.html                # HTML template with Google Fonts (Outfit & Plus Jakarta)
+├── index.html                # HTML template with Google Fonts (Syne, Jakarta, JetBrains)
 ├── package.json              # Project scripts and dependencies
 ├── vite.config.js            # Vite build configuration
 └── README.md                 # Project documentation
@@ -75,12 +85,7 @@ tikka/
 
 ### Prerequisites
 
-Ensure you have [Node.js](https://nodejs.org/) (version 18 or higher) installed on your system.
-
-```bash
-node --version
-npm --version
-```
+Ensure you have [Node.js](https://nodejs.org/) (version 18 or higher) installed.
 
 ### 1. Clone the Repository
 
@@ -95,14 +100,7 @@ cd QRForge
 npm install
 ```
 
-*(Or using yarn / pnpm)*
-```bash
-yarn install
-# or
-pnpm install
-```
-
-### 3. Run the Local Development Server
+### 3. Run the Development Server
 
 ```bash
 npm run dev
@@ -125,34 +123,9 @@ http://localhost:5173
 
 ---
 
-## 🧩 Technologies Used
-
-- **Framework**: [React 18](https://react.dev/)
-- **Build Tool**: [Vite 5](https://vitejs.dev/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **QR Code Engine**: [qrcode](https://www.npmjs.com/package/qrcode)
-- **Delight & Animations**: [canvas-confetti](https://www.npmjs.com/package/canvas-confetti)
-- **Styling**: Vanilla CSS (CSS Variables, Glassmorphism, Responsive Grid)
-- **Fonts**: [Google Fonts](https://fonts.google.com/) (`Outfit` & `Plus Jakarta Sans`)
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-Feel free to check the [issues page](https://github.com/karkichtn/QRForge/issues).
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See `LICENSE` for details.
 
 ---
 
