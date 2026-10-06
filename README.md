@@ -17,7 +17,7 @@ A modern, production-grade URL-to-QR code generator built with a futuristic dark
 
 ## 🌟 Highlights
 
-- ⚡ **Instant Client-Side Generation**: QR codes are rendered dynamically within your browser in milliseconds.
+- ⚡ **Zero-Click Instant Generation**: Paste or type any link and your QR code appears **instantly** — no button click required!
 - 📱 **100% Camera Scannable**: Rendered inside a high-contrast white card ensuring crisp readability for iOS Camera, Google Lens, and all barcode scanners.
 - 🔒 **Zero Data Logging**: Your URLs never leave your browser. No tracking redirects, no analytics middlemen, no database storage.
 - 🎨 **Style & Resolution Controls**: Customizable color themes (Classic Dark, Cyber Indigo, Neon Purple, Midnight Blue, Emerald, Crimson), error correction levels (H/Q/M), and HD exports up to 4K (1200×1200).

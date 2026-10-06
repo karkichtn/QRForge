@@ -100,23 +100,24 @@ export default function QRGenerator({ showToast }) {
   };
 
   // Main Generation Handler
-  const handleGenerate = async (overrideUrl) => {
+  const handleGenerate = async (overrideUrl, triggerConfetti = true, isSilentValidation = false) => {
     const rawToTest = typeof overrideUrl === 'string' ? overrideUrl : inputUrl;
-    setErrorMessage('');
+    if (!isSilentValidation) {
+      setErrorMessage('');
+    }
 
     const validation = normalizeAndValidateUrl(rawToTest);
     if (!validation.valid) {
-      setErrorMessage(validation.error);
-      return;
+      if (!isSilentValidation) {
+        setErrorMessage(validation.error);
+      }
+      return false;
     }
 
     const validatedUrl = validation.url;
     setIsGenerating(true);
 
     try {
-      // Simulate quick smooth async processing
-      await new Promise((resolve) => setTimeout(resolve, 220));
-
       const generatedDataUrl = await QRCode.toDataURL(validatedUrl, {
         width: qrSize,
         margin: 2,
@@ -131,6 +132,7 @@ export default function QRGenerator({ showToast }) {
       setCurrentUrl(validatedUrl);
       setInputUrl(validatedUrl);
       setHasGenerated(true);
+      setErrorMessage('');
 
       // Save to history
       const newEntry = {
@@ -146,29 +148,65 @@ export default function QRGenerator({ showToast }) {
         return [newEntry, ...filtered].slice(0, 6);
       });
 
-      // Confetti celebratory burst
-      try {
-        confetti({
-          particleCount: 35,
-          spread: 60,
-          origin: { y: 0.65 },
-          colors: ['#8b5cf6', '#6366f1', '#06b6d4', '#38bdf8'],
-        });
-      } catch {
-        // ignore in non-canvas environments
+      // Confetti celebratory burst on explicit paste or generate
+      if (triggerConfetti) {
+        try {
+          confetti({
+            particleCount: 30,
+            spread: 55,
+            origin: { y: 0.65 },
+            colors: ['#8b5cf6', '#6366f1', '#06b6d4', '#38bdf8'],
+          });
+        } catch {
+          // ignore
+        }
       }
+      return true;
     } catch (err) {
       console.error('QR Generation failed:', err);
-      setErrorMessage('Could not generate QR code. Please check your URL.');
+      if (!isSilentValidation) {
+        setErrorMessage('Could not generate QR code. Please check your URL.');
+      }
+      return false;
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Real-time live auto-generation when inputUrl changes
+  useEffect(() => {
+    const trimmed = inputUrl.trim();
+    if (!trimmed) {
+      setHasGenerated(false);
+      setDataUrl('');
+      setCurrentUrl('');
+      setErrorMessage('');
+      return;
+    }
+
+    // Skip if already generated for this exact URL
+    if (currentUrl === trimmed && hasGenerated) {
+      return;
+    }
+
+    const validation = normalizeAndValidateUrl(trimmed);
+    if (!validation.valid) {
+      // Don't disturb user with errors while they are midway typing
+      return;
+    }
+
+    const debounceTimer = setTimeout(() => {
+      handleGenerate(trimmed, false, true);
+    }, 200);
+
+    return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputUrl]);
+
   // Handle re-render if options change while a QR is visible
   useEffect(() => {
     if (hasGenerated && currentUrl) {
-      handleGenerate(currentUrl);
+      handleGenerate(currentUrl, false, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedColor, qrSize, ecLevel]);
@@ -178,19 +216,34 @@ export default function QRGenerator({ showToast }) {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (inputUrl.trim() && !isGenerating) {
-        handleGenerate();
+        handleGenerate(inputUrl, true, false);
       }
     }
   };
 
-  // Clipboard Paste Helper
+  // Direct generation on paste event in input
+  const handleInputPaste = (e) => {
+    const pastedText = e.clipboardData?.getData('text');
+    if (pastedText && pastedText.trim()) {
+      const trimmed = pastedText.trim();
+      setInputUrl(trimmed);
+      setErrorMessage('');
+      // Generate immediately without waiting for a click or delay!
+      handleGenerate(trimmed, true, false);
+    }
+  };
+
+  // Clipboard Paste Button Click Helper
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) {
-        setInputUrl(text);
+      if (text && text.trim()) {
+        const trimmed = text.trim();
+        setInputUrl(trimmed);
         setErrorMessage('');
         inputRef.current?.focus();
+        // Generate immediately without waiting for a click!
+        handleGenerate(trimmed, true, false);
       }
     } catch {
       showToast('Could not access clipboard. Please paste manually.', 'info');
@@ -314,7 +367,10 @@ export default function QRGenerator({ showToast }) {
                   <Link2 size={16} color="var(--primary-cyan)" />
                   <span>Target Destination URL</span>
                 </label>
-                <span className="label-hint">Press Enter ↵ to generate</span>
+                <span className="label-hint" style={{ color: 'var(--primary-cyan)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                  Instant Live Generation Active
+                </span>
               </div>
 
               <div className={`input-box-wrapper ${errorMessage ? 'has-error' : ''}`}>
@@ -333,6 +389,7 @@ export default function QRGenerator({ showToast }) {
                     setInputUrl(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
+                  onPaste={handleInputPaste}
                   onKeyDown={handleKeyDown}
                   aria-invalid={!!errorMessage}
                   aria-describedby={errorMessage ? 'url-error' : undefined}
@@ -460,23 +517,29 @@ export default function QRGenerator({ showToast }) {
             </div>
 
             {/* Primary Generate Button */}
+            {/* Primary Generate Button / Live Indicator */}
             <div className="generate-btn-row">
               <button
                 type="button"
                 className="btn-generate"
                 disabled={!inputUrl.trim() || isGenerating}
-                onClick={() => handleGenerate()}
+                onClick={() => handleGenerate(inputUrl, true, false)}
                 aria-busy={isGenerating}
               >
                 {isGenerating ? (
                   <>
                     <div className="spinner" />
-                    <span>Generating QR Code...</span>
+                    <span>Rendering QR Code...</span>
+                  </>
+                ) : hasGenerated ? (
+                  <>
+                    <Check size={20} strokeWidth={2.4} />
+                    <span>QR Code Generated • Instant Live</span>
                   </>
                 ) : (
                   <>
-                    <QrCode size={20} strokeWidth={2.4} />
-                    <span>Generate QR Code</span>
+                    <Sparkles size={20} strokeWidth={2.4} />
+                    <span>Instant Live Generator</span>
                   </>
                 )}
               </button>
@@ -492,7 +555,7 @@ export default function QRGenerator({ showToast }) {
                   </div>
                   <div className="empty-title">Your QR code will appear here</div>
                   <div className="empty-desc">
-                    Paste any website link above and click <strong>Generate QR Code</strong> to create a scannable code.
+                    Paste or enter any link above — your QR code will generate <strong>instantly</strong> with zero clicks required!
                   </div>
                 </div>
               ) : (
